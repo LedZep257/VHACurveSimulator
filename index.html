@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temogram Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .splash-page {
+            text-align: center;
+        }
+
+        .splash-page h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .splash-page p {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .device-selection {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .device-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            min-width: 250px;
+        }
+
+        .device-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .device-card h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .device-card p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .simulator-page {
+            display: none;
+        }
+
+        .simulator-page.active {
+            display: block;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .header h2 {
+            font-size: 2em;
+            color: #333;
+        }
+
+        .start-again-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+
+        .start-again-btn:hover {
+            background: #c82333;
+        }
+
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .input-section.two-column {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .input-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1.1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-group .unit {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #218838;
+        }
+
+        .btn-secondary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #0056b3;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .canvas-container {
+            background: #4a5d7f;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 3px solid #2c3e5f;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .rotem-canvas {
+            background: #f0f0f0;
+        }
+
+        .teg-canvas {
+            background: #0f0f1e;
+        }
+
+        @media (max-width: 768px) {
+            .input-section, .input-section.two-column {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Splash Page -->
+        <div id="splashPage" class="splash-page">
+            <h1>Temogram Simulator</h1>
+            <p>Select your device to begin</p>
+            <div class="device-selection">
+                <div class="device-card" onclick="selectDevice('rotem')">
+                    <h2>ROTEM Sigma</h2>
+                    <p>Rotational Thromboelastometry</p>
+                </div>
+                <div class="device-card" onclick="selectDevice('teg')">
+                    <h2>TEG 6s</h2>
+                    <p>Thromboelastography</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROTEM Simulator Page -->
+        <div id="rotemPage" class="simulator-page">
+            <div class="header">
+                <h2>ROTEM Sigma Simulator</h2>
+                <button class="start-again-btn" onclick="startAgain()">Start Again</button>
+            </div>
+            
+            <div class="input-section two-column">
+                <div class="input-group">
+                    <label for="fibtemA5">FIBTEM A5</label>
+                    <input type="number" id="fibtemA5" placeholder="Enter A5 value" min="0" max="100" step="1">
+                    <span class="unit">(mm, normal range: 8-30)</span>
+                </div>
+                <div class="input-group">
+                    <label for="extemCT">EXTEM CT</label>
+                    <input type="number" id="extemCT" placeholder="Enter CT value" min="0" max="300" step="1">
+                    <span class="unit">(seconds, normal: &lt;75)</span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-primary" id="rotemRunBtn" onclick="runRotem()">Run</button>
+                <button class="btn btn-secondary" id="rotemPauseBtn" onclick="pauseRotem()" disabled>Pause</button>
+                <button class="btn btn-warning" id="rotemResetBtn" onclick="resetRotem()">Reset</button>
+                <button class="btn btn-secondary" onclick="saveRotem()">Save as JPG</button>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="rotemCanvas" width="1200" height="800" class="rotem-canvas"></canvas>
+            </div>
+        </div>
+
+        <!-- TEG Simulator Page -->
+        <div id="tegPage" class="simulator-page">
+            <div class="header">
+                <h2>TEG 6s Simulator</h2>
+                <button class="start-again-btn" onclick="startAgain()">Start Again</button>
+            </div>
+            
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="ckrTime">CK R Time</label>
+                    <input type="number" id="ckrTime" placeholder="Enter R time value" min="0" max="20" step="0.1">
+                    <span class="unit">(minutes, normal: &lt;7.6)</span>
+                </div>
+                <div class="input-group">
+                    <label for="ckMA">CK MA</label>
+                    <input type="number" id="ckMA" placeholder="Enter MA value" min="0" max="100" step="1">
+                    <span class="unit">(mm, normal range: 52-69)</span>
+                </div>
+                <div class="input-group">
+                    <label for="cffA10">CFF A10 (MA)</label>
+                    <input type="number" id="cffA10" placeholder="Enter A10/MA value" min="0" max="100" step="1">
+                    <span class="unit">(mm, normal range: 17-40)</span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-primary" id="tegRunBtn" onclick="runTeg()">Run</button>
+                <button class="btn btn-secondary" id="tegPauseBtn" onclick="pauseTeg()" disabled>Pause</button>
+                <button class="btn btn-warning" id="tegResetBtn" onclick="resetTeg()">Reset</button>
+                <button class="btn btn-secondary" onclick="saveTeg()">Save as JPG</button>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="tegCanvas" width="1200" height="800" class="teg-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDevice = null;
+        let animationFrame = null;
+        let isPaused = false;
+        let currentProgress = 0;
+
+        // ROTEM specific variables
+        let rotemA5 = 0;
+        let rotemCT = 0;
+        let rotemStartTime = 0;
+
+        // TEG specific variables
+        let tegA10 = 0;
+        let tegCKR = 0;
+        let tegCKMA = 0;
+        let tegStartTime = 0;
+
+        const ANIMATION_DURATION = 20000; // 20 seconds
+
+        function selectDevice(device) {
+            currentDevice = device;
+            document.getElementById('splashPage').style.display = 'none';
+            
+            if (device === 'rotem') {
+                document.getElementById('rotemPage').classList.add('active');
+                drawRotemGrid();
+            } else {
+                document.getElementById('tegPage').classList.add('active');
+                drawTegGrid();
+            }
+        }
+
+        function startAgain() {
+            document.getElementById('splashPage').style.display = 'block';
+            document.getElementById('rotemPage').classList.remove('active');
+            document.getElementById('tegPage').classList.remove('active');
+            
+            resetRotem();
+            resetTeg();
+            
+            currentDevice = null;
+        }
+
+        // ROTEM Functions
+        function drawRotemGrid() {
+            const canvas = document.getElementById('rotemCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas with blue header background
+            ctx.fillStyle = '#4472C4';
+            ctx.fillRect(0, 0, canvas.width, 40);
+            
+            // Main background
+            ctx.fillStyle = '#e8e8e8';
+            ctx.fillRect(0, 40, canvas.width, canvas.height - 40);
+            
+            // Header text
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('ROTEM® Measurement module', 20, 25);
+            
+            // Draw 2x2 grid panels
+            const panelWidth = 580;
+            const panelHeight = 360;
+            const panelGap = 10;
+            const startX = 10;
+            const startY = 50;
+            
+            // Panel configurations
+            const panels = [
+                { x: startX, y: startY, label: 'FIBTEM C', color: '#8B4513', textColor: 'white', active: true, num: '1' },
+                { x: startX + panelWidth + panelGap, y: startY, label: 'EXTEM C', color: '#CC0000', textColor: 'white', active: true, num: '2' },
+                { x: startX, y: startY + panelHeight + panelGap, label: 'INTEM C', color: '#4472C4', textColor: 'white', active: false, num: '3' },
+                { x: startX + panelWidth + panelGap, y: startY + panelHeight + panelGap, label: 'APTEM C', color: '#9966CC', textColor: 'white', active: false, num: '4' }
+            ];
+            
+            panels.forEach((panel, index) => {
+                // Panel background
+                ctx.fillStyle = '#d0d0d0';
+                ctx.fillRect(panel.x, panel.y, panelWidth, panelHeight);
+                
+                // Panel border
+                ctx.strokeStyle = '#808080';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(panel.x, panel.y, panelWidth, panelHeight);
+                
+                // Panel number
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 12px Arial';
+                ctx.fillText(panel.num, panel.x + 5, panel.y + 15);
+                
+                // Label banner
+                ctx.fillStyle = panel.color;
+                ctx.fillRect(panel.x + 200, panel.y, 180, 30);
+                ctx.fillStyle = panel.textColor;
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText(panel.label, panel.x + 230, panel.y + 20);
+                
+                // Graph area background
+                const graphX = panel.x + 10;
+                const graphY = panel.y + 40;
+                const graphWidth = 420;
+                const graphHeight = 310;
+                
+                ctx.fillStyle = 'white';
+                ctx.fillRect(graphX, graphY, graphWidth, graphHeight);
+                
+                // Draw grid lines
+                ctx.strokeStyle = '#c0c0c0';
+                ctx.lineWidth = 0.5;
+                
+                // Vertical grid lines (time)
+                for (let i = 0; i <= 5; i++) {
+                    const x = graphX + (i / 5) * graphWidth;
+                    ctx.beginPath();
+                    ctx.moveTo(x, graphY);
+                    ctx.lineTo(x, graphY + graphHeight);
+                    ctx.stroke();
+                }
+                
+                // Horizontal grid lines
+                for (let i = 0; i <= 6; i++) {
+                    const y = graphY + (i / 6) * graphHeight;
+                    ctx.beginPath();
+                    ctx.moveTo(graphX, y);
+                    ctx.lineTo(graphX + graphWidth, y);
+                    ctx.stroke();
+                }
+                
+                // Center line (x-axis)
+                ctx.strokeStyle = '#808080';
+                ctx.lineWidth = 1;
+                const centerY = graphY + graphHeight / 2;
+                ctx.beginPath();
+                ctx.moveTo(graphX, centerY);
+                ctx.lineTo(graphX + graphWidth, centerY);
+                ctx.stroke();
+                
+                // Y-axis labels (amplitude)
+                ctx.fillStyle = '#000000';
+                ctx.font = '9px Arial';
+                const amplitudes = [60, 40, 20, -20, -40, -60];
+                amplitudes.forEach((amp, i) => {
+                    const y = graphY + ((i + 0.5) / 6) * graphHeight;
+                    ctx.fillText(amp.toString(), graphX - 20, y);
+                });
+                
+                // X-axis labels (time in minutes)
+                for (let i = 0; i <= 5; i++) {
+                    const x = graphX + (i / 5) * graphWidth;
+                    const time = i * 10;
+                    ctx.fillText(time.toString(), x - 5, graphY + graphHeight + 12);
+                }
+                ctx.fillText('min', graphX + graphWidth - 10, graphY + graphHeight + 12);
+                ctx.fillText('mm', graphX - 20, graphY - 5);
+                
+                // Parameter panel on the right
+                const paramX = panel.x + 440;
+                const paramY = panel.y + 40;
+                
+                ctx.fillStyle = '#c0c0c0';
+                ctx.fillRect(paramX, paramY, 130, graphHeight);
+                
+                // If inactive panel, draw red X
+                if (!panel.active) {
+                    ctx.strokeStyle = '#CC0000';
+                    ctx.lineWidth = 8;
+                    ctx.beginPath();
+                    ctx.moveTo(graphX + 20, graphY + 20);
+                    ctx.lineTo(graphX + graphWidth - 20, graphY + graphHeight - 20);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(graphX + graphWidth - 20, graphY + 20);
+                    ctx.lineTo(graphX + 20, graphY + graphHeight - 20);
+                    ctx.stroke();
+                }
+                
+                // Store panel info for animation
+                if (index === 0) {
+                    canvas.fibtemPanel = { graphX, graphY, graphWidth, graphHeight, centerY };
+                } else if (index === 1) {
+                    canvas.extemPanel = { graphX, graphY, graphWidth, graphHeight, centerY };
+                }
+            });
+        }
+
+        function runRotem() {
+            const a5Input = document.getElementById('fibtemA5').value;
+            const ctInput = document.getElementById('extemCT').value;
+            
+            if (!a5Input || !ctInput) {
+                alert('Please enter both FIBTEM A5 and EXTEM CT values');
+                return;
+            }
+            
+            rotemA5 = parseFloat(a5Input);
+            rotemCT = parseFloat(ctInput);
+            
+            document.getElementById('rotemRunBtn').disabled = true;
+            document.getElementById('rotemPauseBtn').disabled = false;
+            document.getElementById('rotemResetBtn').disabled = true;
+            
+            rotemStartTime = Date.now();
+            isPaused = false;
+            currentProgress = 0;
+            
+            animateRotem();
+        }
+
+        function animateRotem() {
+            if (isPaused) return;
+            
+            const canvas = document.getElementById('rotemCanvas');
+            const ctx = canvas.getContext('2d');
+            const elapsed = Date.now() - rotemStartTime;
+            currentProgress = Math.min(elapsed / ANIMATION_DURATION, 1);
+            
+            drawRotemGrid();
+            
+            // Get panel coordinates
+            const fibtemPanel = canvas.fibtemPanel;
+            const extemPanel = canvas.extemPanel;
+            
+            const totalPoints = 300;
+            const timeRange = 50; // 50 minutes max
+            
+            // Helper function to draw filled temogram
+            function drawFilledTemogram(panel, amplitude, ct, color) {
+                const points = [];
+                
+                // Calculate points
+                for (let i = 0; i <= totalPoints * currentProgress; i++) {
+                    const t = (i / totalPoints) * timeRange; // Time in minutes
+                    const tSeconds = t * 60; // Time in seconds
+                    
+                    let amp = 0;
+                    
+                    if (tSeconds < ct) {
+                        amp = 0;
+                    } else {
+                        const timeSinceCT = tSeconds - ct;
+                        const maxAmplitude = amplitude;
+                        const normalizedTime = timeSinceCT / 300; // 5 minutes
+                        amp = maxAmplitude * (1 / (1 + Math.exp(-10 * (normalizedTime - 0.5))));
+                    }
+                    
+                    const x = panel.graphX + (t / timeRange) * panel.graphWidth;
+                    const pixelsPerMM = panel.graphHeight / 120; // 120mm total range (-60 to +60)
+                    const yTop = panel.centerY - (amp * pixelsPerMM);
+                    const yBottom = panel.centerY + (amp * pixelsPerMM);
+                    
+                    points.push({ x, yTop, yBottom });
+                }
+                
+                if (points.length < 2) return;
+                
+                // Draw filled shape
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                
+                // Top curve
+                ctx.moveTo(points[0].x, points[0].yTop);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].yTop);
+                }
+                
+                // Bottom curve (reverse)
+                for (let i = points.length - 1; i >= 0; i--) {
+                    ctx.lineTo(points[i].x, points[i].yBottom);
+                }
+                
+                ctx.closePath();
+                ctx.fill();
+            }
+            
+            // Draw FIBTEM (magenta)
+            drawFilledTemogram(fibtemPanel, rotemA5, rotemCT * 0.5, '#E91E8C');
+            
+            // Draw EXTEM (blue)
+            drawFilledTemogram(extemPanel, 35, rotemCT, '#2E5090');
+            
+            if (currentProgress < 1) {
+                animationFrame = requestAnimationFrame(animateRotem);
+            } else {
+                document.getElementById('rotemRunBtn').disabled = false;
+                document.getElementById('rotemPauseBtn').disabled = true;
+                document.getElementById('rotemPauseBtn').textContent = 'Pause';
+                document.getElementById('rotemResetBtn').disabled = false;
+                isPaused = false;
+            }
+        }
+
+        function pauseRotem() {
+            if (isPaused) {
+                isPaused = false;
+                rotemStartTime = Date.now() - (currentProgress * ANIMATION_DURATION);
+                document.getElementById('rotemPauseBtn').textContent = 'Pause';
+                animateRotem();
+            } else {
+                isPaused = true;
+                document.getElementById('rotemPauseBtn').textContent = 'Play';
+                if (animationFrame) {
+                    cancelAnimationFrame(animationFrame);
+                }
+            }
+        }
+
+        function resetRotem() {
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+            }
+            
+            isPaused = false;
+            currentProgress = 0;
+            
+            document.getElementById('rotemRunBtn').disabled = false;
+            document.getElementById('rotemPauseBtn').disabled = true;
+            document.getElementById('rotemPauseBtn').textContent = 'Pause';
+            document.getElementById('rotemResetBtn').disabled = false;
+            
+            drawRotemGrid();
+        }
+
+        function saveRotem() {
+            const canvas = document.getElementById('rotemCanvas');
+            const link = document.createElement('a');
+            link.download = 'rotem-temogram.jpg';
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+        }
+
+        // TEG Functions
+        function drawTegGrid() {
+            const canvas = document.getElementById('tegCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Dark background
+            ctx.fillStyle = '#2a2a2a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Main graph area
+            const graphX = 250;
+            const graphY = 50;
+            const graphWidth = 920;
+            const graphHeight = 450;
+            
+            // Slightly lighter background for graph
+            ctx.fillStyle = '#353535';
+            ctx.fillRect(graphX, graphY, graphWidth, graphHeight);
+            
+            // Draw grid
+            ctx.strokeStyle = '#4a4a4a';
+            ctx.lineWidth = 1;
+            
+            const centerY = graphY + graphHeight / 2;
+            
+            // Vertical grid lines (time) - every 5 minutes
+            for (let i = 0; i <= 100; i += 5) {
+                const x = graphX + (i / 100) * graphWidth;
+                ctx.beginPath();
+                ctx.moveTo(x, graphY);
+                ctx.lineTo(x, graphY + graphHeight);
+                ctx.stroke();
+            }
+            
+            // Horizontal grid lines (amplitude)
+            for (let i = -100; i <= 100; i += 20) {
+                const y = centerY - (i / 100) * (graphHeight / 2);
+                ctx.beginPath();
+                ctx.moveTo(graphX, y);
+                ctx.lineTo(graphX + graphWidth, y);
+                ctx.stroke();
+            }
+            
+            // Center line (x-axis) - brighter
+            ctx.strokeStyle = '#666666';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(graphX, centerY);
+            ctx.lineTo(graphX + graphWidth, centerY);
+            ctx.stroke();
+            
+            // Y-axis line
+            ctx.strokeStyle = '#cccccc';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(graphX, graphY);
+            ctx.lineTo(graphX, graphY + graphHeight);
+            ctx.stroke();
+            
+            // Axis labels
+            ctx.fillStyle = '#cccccc';
+            ctx.font = '12px Arial';
+            
+            // Y-axis label
+            ctx.save();
+            ctx.translate(graphX - 30, centerY);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Amplitude (mm)', 0, 0);
+            ctx.restore();
+            
+            // X-axis label
+            ctx.fillText('Zeit (min)', graphX + graphWidth - 50, graphY + graphHeight + 25);
+            
+            // Y-axis scale markers
+            ctx.font = '10px Arial';
+            const amplitudes = [100, 80, 60, 40, 20, 0, -20, -40, -60, -80, -100];
+            amplitudes.forEach((amp) => {
+                const y = centerY - (amp / 100) * (graphHeight / 2);
+                ctx.fillText(amp.toString(), graphX - 20, y + 4);
+            });
+            
+            // X-axis time markers
+            for (let i = 0; i <= 100; i += 10) {
+                const x = graphX + (i / 100) * graphWidth;
+                ctx.fillText(i.toString(), x - 5, graphY + graphHeight + 15);
+            }
+            
+            // Left panel with test labels
+            const panelX = 20;
+            const panelY = 520;
+            const panelWidth = 200;
+            const buttonHeight = 60;
+            
+            // Test buttons
+            const tests = [
+                { label: 'CK', color: '#E74C3C', active: true },
+                { label: 'CRT', color: '#9B59B6', active: false },
+                { label: 'CKH', color: '#2ECC71', active: false },
+                { label: 'CFF', color: '#3498DB', active: true }
+            ];
+            
+            tests.forEach((test, index) => {
+                const y = panelY + (index * buttonHeight);
+                
+                // Button background
+                ctx.fillStyle = test.color;
+                ctx.fillRect(panelX, y, panelWidth, buttonHeight - 5);
+                
+                // Button text
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(test.label, panelX + panelWidth / 2, y + 38);
+                ctx.textAlign = 'left';
+                
+                // Red X for inactive tests
+                if (!test.active) {
+                    ctx.strokeStyle = '#CC0000';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(panelX + 10, y + 10);
+                    ctx.lineTo(panelX + panelWidth - 10, y + buttonHeight - 15);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(panelX + panelWidth - 10, y + 10);
+                    ctx.lineTo(panelX + 10, y + buttonHeight - 15);
+                    ctx.stroke();
+                }
+            });
+            
+            // Device label
+            ctx.fillStyle = '#999999';
+            ctx.font = '12px Arial';
+            ctx.fillText('Gerätename: TEG 6s', graphX + graphWidth - 150, graphY + graphHeight + 45);
+            
+            // Store graph dimensions
+            canvas.tegGraph = { graphX, graphY, graphWidth, graphHeight, centerY };
+        }
+
+        function runTeg() {
+            const a10Input = document.getElementById('cffA10').value;
+            const ckrInput = document.getElementById('ckrTime').value;
+            const ckMAInput = document.getElementById('ckMA').value;
+            
+            if (!a10Input || !ckrInput || !ckMAInput) {
+                alert('Please enter CK R Time, CK MA, and CFF A10 values');
+                return;
+            }
+            
+            tegA10 = parseFloat(a10Input);
+            tegCKR = parseFloat(ckrInput);
+            tegCKMA = parseFloat(ckMAInput);
+            
+            document.getElementById('tegRunBtn').disabled = true;
+            document.getElementById('tegPauseBtn').disabled = false;
+            document.getElementById('tegResetBtn').disabled = true;
+            
+            tegStartTime = Date.now();
+            isPaused = false;
+            currentProgress = 0;
+            
+            animateTeg();
+        }
+
+        function animateTeg() {
+            if (isPaused) return;
+            
+            const canvas = document.getElementById('tegCanvas');
+            const ctx = canvas.getContext('2d');
+            const elapsed = Date.now() - tegStartTime;
+            currentProgress = Math.min(elapsed / ANIMATION_DURATION, 1);
+            
+            drawTegGrid();
+            
+            const graph = canvas.tegGraph;
+            const totalPoints = 1000;
+            const maxTime = 100; // 100 minutes displayed
+            
+            // Helper function to draw simple TEG curve using Hill equation
+            function drawSimpleTegCurve(startTime, maxAmplitude, timeToMax, color, lineWidth = 3) {
+                const pointsTop = [];
+                const pointsBottom = [];
+                
+                for (let i = 0; i <= totalPoints * currentProgress; i++) {
+                    const t = (i / totalPoints) * maxTime; // Time in minutes
+                    
+                    let amp = 0;
+                    
+                    if (t < startTime) {
+                        // Before start time - flat line at center
+                        amp = 0;
+                    } else {
+                        // Hill equation for characteristic TEG curve shape
+                        const timeInCurve = t - startTime;
+                        const n = 3; // Hill coefficient (controls steepness, 3-4 is typical for TEG)
+                        const k = timeToMax / 2; // Half-maximal time
+                        
+                        // Hill equation: amplitude = (max * t^n) / (k^n + t^n)
+                        amp = (maxAmplitude * Math.pow(timeInCurve, n)) / (Math.pow(k, n) + Math.pow(timeInCurve, n));
+                    }
+                    
+                    const x = graph.graphX + (t / maxTime) * graph.graphWidth;
+                    const pixelsPerMM = (graph.graphHeight / 2) / 100; // 100mm range
+                    const yTop = graph.centerY - (amp * pixelsPerMM);
+                    const yBottom = graph.centerY + (amp * pixelsPerMM);
+                    
+                    pointsTop.push({ x, y: yTop });
+                    pointsBottom.push({ x, y: yBottom });
+                }
+                
+                if (pointsTop.length < 2) return;
+                
+                // Draw upper curve
+                ctx.strokeStyle = color;
+                ctx.lineWidth = lineWidth;
+                ctx.beginPath();
+                ctx.moveTo(pointsTop[0].x, pointsTop[0].y);
+                for (let i = 1; i < pointsTop.length; i++) {
+                    ctx.lineTo(pointsTop[i].x, pointsTop[i].y);
+                }
+                ctx.stroke();
+                
+                // Draw lower curve
+                ctx.beginPath();
+                ctx.moveTo(pointsBottom[0].x, pointsBottom[0].y);
+                for (let i = 1; i < pointsBottom.length; i++) {
+                    ctx.lineTo(pointsBottom[i].x, pointsBottom[i].y);
+                }
+                ctx.stroke();
+            }
+            
+            // CFF parameters - starts at time 0, reaches A10 value by 10 minutes
+            const cffStartTime = 0; // Starts immediately
+            const cffMA = tegA10; // Maximum amplitude is the A10 input value
+            const cffTimeToMax = 10; // Reaches max by 10 minutes
+            
+            // CK parameters - starts at R time, reaches the input MA value
+            const ckStartTime = tegCKR; // Starts at R time (input value)
+            const ckMA = tegCKMA; // MA is the input CK MA value
+            const ckTimeToMax = 15; // Takes ~15 minutes to reach max after R time
+            
+            // Draw CFF curve first (cyan/blue) - starts at time 0
+            drawSimpleTegCurve(cffStartTime, cffMA, cffTimeToMax, '#3498DB', 2.5);
+            
+            // Draw CK curve (red) - starts after R time
+            drawSimpleTegCurve(ckStartTime, ckMA, ckTimeToMax, '#E74C3C', 2.5);
+            
+            // Draw parameter values panel (right side)
+            const paramPanelX = graph.graphX + graph.graphWidth + 20;
+            const paramPanelY = graph.graphY + 50;
+            
+            ctx.fillStyle = '#cccccc';
+            ctx.font = '11px Arial';
+            ctx.textAlign = 'center';
+            
+            // Headers
+            const headers = ['TEG-ACT\n(s)', 'R\n(min)', 'K\n(min)', 'WINKEL\n(Grad)', 'MA\n(mm)', 'LY30\n(%)'];
+            const headerX = [paramPanelX, paramPanelX + 70, paramPanelX + 140, paramPanelX + 210, paramPanelX + 280, paramPanelX + 350];
+            
+            headers.forEach((header, i) => {
+                const lines = header.split('\n');
+                ctx.fillText(lines[0], headerX[i], paramPanelY);
+                ctx.fillText(lines[1], headerX[i], paramPanelY + 14);
+            });
+            
+            // CK row values (red channel)
+            const ckRowY = paramPanelY + 100;
+            ctx.font = 'bold 18px Arial';
+            
+            // Only show values if animation is complete
+            if (currentProgress > 0.8) {
+                // R time for CK
+                ctx.fillStyle = '#FF6B4A';
+                ctx.fillRect(paramPanelX + 40, ckRowY - 20, 60, 30);
+                ctx.fillStyle = 'white';
+                ctx.fillText(ckStartTime.toFixed(1), paramPanelX + 70, ckRowY);
+                
+                // K time for CK (estimated)
+                const ckK = 2.0;
+                ctx.fillStyle = '#FF6B4A';
+                ctx.fillRect(paramPanelX + 110, ckRowY - 20, 60, 30);
+                ctx.fillStyle = 'white';
+                ctx.fillText(ckK.toFixed(1), paramPanelX + 140, ckRowY);
+                
+                // Angle for CK (estimated)
+                const ckAngle = 68;
+                ctx.fillStyle = '#FF6B4A';
+                ctx.fillRect(paramPanelX + 180, ckRowY - 20, 60, 30);
+                ctx.fillStyle = 'white';
+                ctx.fillText(ckAngle.toString(), paramPanelX + 210, ckRowY);
+                
+                // MA for CK
+                ctx.fillStyle = '#FF6B4A';
+                ctx.fillRect(paramPanelX + 250, ckRowY - 20, 60, 30);
+                ctx.fillStyle = 'white';
+                ctx.fillText(ckMA.toFixed(1), paramPanelX + 280, ckRowY);
+            }
+            
+            // CFF row values (cyan channel)
+            const cffRowY = paramPanelY + 240;
+            
+            if (currentProgress > 0.8) {
+                // MA for CFF (which is the A10 input)
+                ctx.fillStyle = '#FF6B4A';
+                ctx.fillRect(paramPanelX + 250, cffRowY - 20, 60, 30);
+                ctx.fillStyle = 'white';
+                ctx.fillText(cffMA.toFixed(1), paramPanelX + 280, cffRowY);
+            }
+            
+            ctx.textAlign = 'left';
+            
+            if (currentProgress < 1) {
+                animationFrame = requestAnimationFrame(animateTeg);
+            } else {
+                document.getElementById('tegRunBtn').disabled = false;
+                document.getElementById('tegPauseBtn').disabled = true;
+                document.getElementById('tegPauseBtn').textContent = 'Pause';
+                document.getElementById('tegResetBtn').disabled = false;
+                isPaused = false;
+            }
+        }
+
+        function pauseTeg() {
+            if (isPaused) {
+                isPaused = false;
+                tegStartTime = Date.now() - (currentProgress * ANIMATION_DURATION);
+                document.getElementById('tegPauseBtn').textContent = 'Pause';
+                animateTeg();
+            } else {
+                isPaused = true;
+                document.getElementById('tegPauseBtn').textContent = 'Play';
+                if (animationFrame) {
+                    cancelAnimationFrame(animationFrame);
+                }
+            }
+        }
+
+        function resetTeg() {
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+            }
+            
+            isPaused = false;
+            currentProgress = 0;
+            
+            document.getElementById('tegRunBtn').disabled = false;
+            document.getElementById('tegPauseBtn').disabled = true;
+            document.getElementById('tegPauseBtn').textContent = 'Pause';
+            document.getElementById('tegResetBtn').disabled = false;
+            
+            drawTegGrid();
+        }
+
+        function saveTeg() {
+            const canvas = document.getElementById('tegCanvas');
+            const link = document.createElement('a');
+            link.download = 'teg-temogram.jpg';
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+        }
+    </script>
+</body>
+</html>
